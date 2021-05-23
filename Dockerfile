@@ -9,6 +9,6 @@ EXPOSE 8080
 
 RUN mkdir /app
 
-COPY --from=build /home/gradle/src/build/libs/*.jar /app/application.jar
+COPY --from=build /home/gradle/src/build/libs/ /app/
 
 ENTRYPOINT ["java", "-jar","/app/application.jar"]

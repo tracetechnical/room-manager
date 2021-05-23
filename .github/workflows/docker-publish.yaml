@@ -46,4 +46,5 @@ jobs:
           #or
           #registry: ghcr.io
           image_name: "pheonixtech/roommanager"
+          stages_image_name: "pheonixtech/roommanager"
           image_tag: "${{ env.VERSION}}"

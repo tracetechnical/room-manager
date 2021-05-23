@@ -4,13 +4,11 @@ import kotlin.jvm.JvmStatic
 import io.reactivex.subjects.PublishSubject
 import org.eclipse.paho.client.mqttv3.MqttMessage
 
-object Application {
+object ddd {
     private const val LONG_DASHES =
         "--------------------------------------------------------------------------------------------------------------------------------------------"
 
-    @Throws(InterruptedException::class)
-    @JvmStatic
-    fun main(args: Array<String>) {
+    fun madn(args: Array<String>) {
         val mqttService = MqttService()
         val on = PublishSubject.create<MqttMessage>()
         val off = PublishSubject.create<MqttMessage>()

@@ -1,3 +1,5 @@
+package uk.co.tracetechnicalservices.roommanager
+
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient
 import org.eclipse.paho.client.mqttv3.MqttClient
 import io.reactivex.subjects.PublishSubject
@@ -6,7 +8,6 @@ import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 import java.util.LinkedHashMap
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
-import org.eclipse.paho.client.mqttv3.IMqttToken
 
 class  MqttService {
     var mqttCallback: MqttSubscriber

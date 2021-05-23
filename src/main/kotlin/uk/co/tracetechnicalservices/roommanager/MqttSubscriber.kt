@@ -1,3 +1,5 @@
+package uk.co.tracetechnicalservices.roommanager
+
 import io.reactivex.subjects.PublishSubject
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import org.eclipse.paho.client.mqttv3.MqttCallback

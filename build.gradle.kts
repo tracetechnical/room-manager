@@ -11,7 +11,12 @@ plugins {
 group = "uk.co.tracetechnicalservices"
 version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_11
-base.archivesBaseName = "foo"
+
+tasks {
+    bootJar {
+        archiveFileName.set("application.jar")
+    }
+}
 
 repositories {
     mavenCentral()

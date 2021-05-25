@@ -63,6 +63,7 @@ class  MqttService {
             rxClient = MqttAsyncClient(broker, clientId + "rx", rxPersistence)
             val connOpts = MqttConnectOptions()
             connOpts.isCleanSession = true
+            connOpts.connectionTimeout = 0
             println("Connecting to broker: $broker")
             val conToken = rxClient!!.connect(connOpts)
             conToken.waitForCompletion()

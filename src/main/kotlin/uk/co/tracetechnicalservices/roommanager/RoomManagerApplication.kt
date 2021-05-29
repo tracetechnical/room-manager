@@ -22,36 +22,48 @@ fun main(args: Array<String>) {
     on.subscribe { a: MqttMessage ->
         if (a.toString() == "1") {
             println("Dim Up")
-            mqttService.publish("lighting/dimmerGroup/2/level", "1024")
             mqttService.publish("lighting/dimmerGroup/3/level", "1024")
+            mqttService.publish("lighting/dimmerGroup/4/level", "1024")
+            mqttService.publish("lighting/dimmerGroup/5/level", "1024")
         }
     }
     off.subscribe { a: MqttMessage ->
         if (a.toString() == "1") {
             println("Dim Down Off")
-            mqttService.publish("lighting/dimmerGroup/2/level", "0")
             mqttService.publish("lighting/dimmerGroup/3/level", "0")
+            mqttService.publish("lighting/dimmerGroup/4/level", "0")
+            mqttService.publish("lighting/dimmerGroup/5/level", "0")
         }
         if (a.toString() == "2") {
             println("Dim Down Low")
-            mqttService.publish("lighting/dimmerGroup/2/level", "10")
             mqttService.publish("lighting/dimmerGroup/3/level", "10")
+            mqttService.publish("lighting/dimmerGroup/4/level", "10")
+            mqttService.publish("lighting/dimmerGroup/5/level", "10")
         }
     }
     onDining.subscribe { a: MqttMessage ->
         if (a.toString() == "1") {
             println("Dim Up")
-            mqttService.publish("lighting/dimmerGroup/0/level", "1024")
+            mqttService.publish("lighting/dimmerGroup/6/level", "1024")
+            mqttService.publish("lighting/dimmerGroup/7/level", "1024")
+            mqttService.publish("lighting/dimmerGroup/8/level", "1024")
+            mqttService.publish("lighting/dimmerGroup/9/level", "1024")
         }
     }
     offDining.subscribe { a: MqttMessage ->
         if (a.toString() == "1") {
             println("Dim Down Off")
-            mqttService.publish("lighting/dimmerGroup/0/level", "0")
+            mqttService.publish("lighting/dimmerGroup/6/level", "0")
+            mqttService.publish("lighting/dimmerGroup/7/level", "0")
+            mqttService.publish("lighting/dimmerGroup/8/level", "0")
+            mqttService.publish("lighting/dimmerGroup/9/level", "0")
         }
         if (a.toString() == "2") {
             println("Dim Down Low")
-            mqttService.publish("lighting/dimmerGroup/0/level", "10")
+            mqttService.publish("lighting/dimmerGroup/6/level", "10")
+            mqttService.publish("lighting/dimmerGroup/7/level", "10")
+            mqttService.publish("lighting/dimmerGroup/8/level", "10")
+            mqttService.publish("lighting/dimmerGroup/9/level", "10")
         }
     }
 }

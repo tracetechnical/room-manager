@@ -1,4 +1,4 @@
-package uk.co.tracetechnicalservices.roommanager
+package uk.co.tracetechnicalservices.roommanager.services
 
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient
 import org.eclipse.paho.client.mqttv3.MqttClient
@@ -8,12 +8,15 @@ import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 import java.util.LinkedHashMap
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
+import org.springframework.stereotype.Service
+import uk.co.tracetechnicalservices.roommanager.MqttSubscriber
 
+@Service
 class  MqttService {
-    var mqttCallback: MqttSubscriber
     var rxClient: MqttAsyncClient? = null
     var txClient: MqttClient? = null
-    var listeners: MutableMap<String, PublishSubject<MqttMessage>>
+    final var listeners: MutableMap<String, PublishSubject<MqttMessage>>
+
     fun registerListener(path: String, publishSubject: PublishSubject<MqttMessage>) {
         try {
             rxClient!!.subscribe(path, 0)
@@ -28,7 +31,6 @@ class  MqttService {
         try {
             val message = MqttMessage(content.toByteArray())
             message.qos = 0
-            println("$message -> $topic")
             txClient!!.publish(topic, message)
         } catch (me: MqttException) {
             handleException(me)
@@ -56,7 +58,7 @@ class  MqttService {
         val rxPersistence = MemoryPersistence()
         val txPersistence = MemoryPersistence()
         listeners = LinkedHashMap()
-        mqttCallback = MqttSubscriber(listeners)
+        val mqttCallback = MqttSubscriber(listeners)
         val broker = "tcp://192.168.10.229:1883"
         val clientId = "JavaSample2"
         try {
@@ -77,6 +79,7 @@ class  MqttService {
             txClient = MqttClient(broker, clientId + "tx", txPersistence)
             val connOpts = MqttConnectOptions()
             connOpts.isCleanSession = true
+            connOpts.connectionTimeout = 0
             println("Connecting to broker: $broker")
             txClient!!.connect(connOpts)
             println("Connected")

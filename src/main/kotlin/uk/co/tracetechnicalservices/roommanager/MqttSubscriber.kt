@@ -10,7 +10,6 @@ class MqttSubscriber(var listeners: Map<String, PublishSubject<MqttMessage>>) : 
     override fun messageArrived(path: String, mqttMessage: MqttMessage) {
         val pub = listeners[path]
         if (pub != null) {
-            println("$path -> $mqttMessage")
             pub.onNext(mqttMessage)
         }
     }

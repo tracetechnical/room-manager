@@ -5,6 +5,7 @@ import io.reactivex.subjects.PublishSubject
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import org.springframework.stereotype.Service
 import uk.co.tracetechnicalservices.roommanager.models.*
+import uk.co.tracetechnicalservices.roommanager.repositories.RoomRepository
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -13,16 +14,15 @@ import kotlin.concurrent.timer
 import kotlin.concurrent.timerTask
 
 @Service
-class SetupService(private val mqttService: MqttService) {
+class SetupService(private val mqttService: MqttService, private val roomRepository: RoomRepository) {
     init {
         setup()
         runSetup()
         setupSwitches()
     }
 
-    var rooms: List<Room> = ArrayList()
     private final fun setup() {
-        rooms = listOf(
+        roomRepository.put(
             Room(
                 0,
                 "Porch",
@@ -36,7 +36,8 @@ class SetupService(private val mqttService: MqttService) {
                 mapOf(
                     "All On" to RoomPreset(mapOf("Porch" to 1024))
                 )
-            ),
+            ))
+        roomRepository.put(
             Room(
                 1,
                 "Living Room",
@@ -63,7 +64,8 @@ class SetupService(private val mqttService: MqttService) {
                     "All Off" to RoomPreset(mapOf("Around TV" to 0, "TV" to 0, "Sofa" to 0)),
                     "TV" to RoomPreset(mapOf("Around TV" to 100, "TV" to 0, "Sofa" to 100))
                 )
-            ),
+            ))
+        roomRepository.put(
             Room(
                 2,
                 "Dining Room",
@@ -97,8 +99,7 @@ class SetupService(private val mqttService: MqttService) {
 
     private fun runSetup() {
         val obj = ObjectMapper()
-        println(obj.writeValueAsString(rooms))
-        rooms.stream().forEach { room ->
+        roomRepository.getAll().stream().forEach { room ->
             room.switches.forEach { switch ->
                 mqttService.publish("lighting/switch/${switch.channel}/action", switch.action.toString())
                 mqttService.publish("lighting/switch/${switch.channel}/name", switch.name)
@@ -134,7 +135,7 @@ class SetupService(private val mqttService: MqttService) {
         var level = 0
         SwitchManager(1, mqttService)
             .setup()
-            .setupActionOnPressAndHold {
+              .setupActionOnPressAndHold {
                 if (level <= 1024) {
                     level += 2;
                     (1..3).forEach { mqttService.publish("lighting/dimmerGroup/$it/level", "$level") }

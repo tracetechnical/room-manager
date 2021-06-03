@@ -101,7 +101,7 @@ class SetupService(private val mqttService: MqttService,
         roomRepository.put(
             Room(
                 2,
-                "Master Bedroom Room",
+                "Master Bedroom",
                 listOf(
                     Switch(7, "Master Bedroom Up", EActions.TOGGLE_UP),
                     Switch(8, "Master Bedroom Down", EActions.TOGGLE_DOWN)

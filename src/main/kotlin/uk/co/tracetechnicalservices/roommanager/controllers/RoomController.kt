@@ -1,5 +1,6 @@
 package uk.co.tracetechnicalservices.roommanager.controllers
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.web.bind.annotation.*
 import uk.co.tracetechnicalservices.roommanager.models.*
 import uk.co.tracetechnicalservices.roommanager.repositories.RoomRepository
@@ -56,6 +57,19 @@ class RoomController(val roomRepository: RoomRepository, val mqttService: MqttSe
                 }
             },
             Unit
+        )
+    }
+
+    @PostMapping("globalLevel")
+    fun setRoomGlobalLevel(@PathVariable("name") name: String, @RequestBody body: DimmerGroupLevelRequest) {
+        val om = ObjectMapper()
+        loadRoomByName(
+            name,
+            { room ->
+                val roomGroupIndicies = room.dimmerGroups.values.stream().mapToInt { it.groupIdx }.toArray()
+                val req = DimmerGlobalRequest(roomGroupIndicies.toTypedArray(), body.level)
+                mqttService.publish("lighting/dimmerGroup/global", om.writeValueAsString(req))
+            }, Unit
         )
     }
 

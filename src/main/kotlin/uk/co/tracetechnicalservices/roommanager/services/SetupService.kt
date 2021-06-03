@@ -5,6 +5,7 @@ import io.reactivex.subjects.PublishSubject
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import org.springframework.stereotype.Service
 import uk.co.tracetechnicalservices.roommanager.models.*
+import uk.co.tracetechnicalservices.roommanager.repositories.DimmerGroupRepository
 import uk.co.tracetechnicalservices.roommanager.repositories.RoomRepository
 import java.util.*
 import java.util.concurrent.Executors
@@ -14,14 +15,16 @@ import kotlin.concurrent.timer
 import kotlin.concurrent.timerTask
 
 @Service
-class SetupService(private val mqttService: MqttService, private val roomRepository: RoomRepository) {
+class SetupService(private val mqttService: MqttService,
+                   private val roomRepository: RoomRepository,
+                   private val dimmerGroupRepository: DimmerGroupRepository) {
     init {
         setup()
         runSetup()
         setupSwitches()
     }
 
-    private final fun setup() {
+    private fun setup() {
         roomRepository.put(
             Room(
                 0,
@@ -105,6 +108,7 @@ class SetupService(private val mqttService: MqttService, private val roomReposit
                 mqttService.publish("lighting/switch/${switch.channel}/name", switch.name)
             }
             room.dimmerGroups.forEach { group ->
+                dimmerGroupRepository.put(group.key, DimmerGroup(group.value.groupIdx, group.value.level))
                 mqttService.publish("lighting/dimmerGroup/${group.value.groupIdx}/name", group.key)
             }
             room.lights.forEach { light ->

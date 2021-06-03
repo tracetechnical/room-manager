@@ -3,13 +3,18 @@ package uk.co.tracetechnicalservices.roommanager.controllers
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.web.bind.annotation.*
 import uk.co.tracetechnicalservices.roommanager.models.*
+import uk.co.tracetechnicalservices.roommanager.repositories.DimmerGroupRepository
 import uk.co.tracetechnicalservices.roommanager.repositories.RoomRepository
 import uk.co.tracetechnicalservices.roommanager.services.MqttService
 import java.util.*
 
 @RestController
 @RequestMapping("rooms/{name}")
-class RoomController(val roomRepository: RoomRepository, val mqttService: MqttService) {
+class RoomController(
+    val dimmerGroupRepository: DimmerGroupRepository,
+    val roomRepository: RoomRepository,
+    val mqttService: MqttService
+) {
     @GetMapping
     fun getRoomByName(@PathVariable("name") name: String): Optional<Room> {
         return roomRepository.getByName(name)
@@ -24,7 +29,12 @@ class RoomController(val roomRepository: RoomRepository, val mqttService: MqttSe
     fun setRoomPreset(@PathVariable("name") name: String, @RequestBody body: RoomPresetRequest) {
         return loadRoomByName(
             name,
-            { r: Room -> mqttService.publish("lighting/room/${r.name}/preset", body.preset) },
+            { r: Room ->
+                r.roomPresets[body.preset]?.dimmerGroupLevels?.forEach { (groupName, level) ->
+                    dimmerGroupRepository.getByName(groupName).ifPresent { group -> group.level = level }
+                }
+                mqttService.publish("lighting/room/${r.name}/preset", body.preset)
+            },
             Unit
         )
     }
@@ -51,6 +61,7 @@ class RoomController(val roomRepository: RoomRepository, val mqttService: MqttSe
         return loadRoomByName(
             name,
             { r ->
+                dimmerGroupRepository.getByName(groupName).ifPresent { it.level = body.level }
                 val group = r.dimmerGroups[groupName]
                 if (group != null) {
                     mqttService.publish("lighting/dimmerGroup/${group.groupIdx}/level", "${body.level}")
@@ -67,6 +78,9 @@ class RoomController(val roomRepository: RoomRepository, val mqttService: MqttSe
             name,
             { room ->
                 val roomGroupIndicies = room.dimmerGroups.values.stream().mapToInt { it.groupIdx }.toArray()
+                roomGroupIndicies.forEach { it ->
+                    dimmerGroupRepository.getById(it).ifPresent { group -> group.level = body.level }
+                }
                 val req = DimmerGlobalRequest(roomGroupIndicies.toTypedArray(), body.level)
                 mqttService.publish("lighting/dimmerGroup/global", om.writeValueAsString(req))
             }, Unit

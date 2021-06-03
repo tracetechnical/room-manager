@@ -98,6 +98,36 @@ class SetupService(private val mqttService: MqttService,
                 )
             )
         )
+        roomRepository.put(
+            Room(
+                2,
+                "Master Bedroom Room",
+                listOf(
+                    Switch(7, "Master Bedroom Up", EActions.TOGGLE_UP),
+                    Switch(8, "Master Bedroom Down", EActions.TOGGLE_DOWN)
+                ),
+                mapOf(
+                    "Kate" to DimmerGroup(11, 0),
+                    "Alex" to DimmerGroup(12, 0),
+                    "Reading" to DimmerGroup(13, 0),
+                    "Rest of Room" to DimmerGroup(14, 0)
+                ),
+                listOf(
+                    Light(0, "Front Left", 24, "Rest of Room"),
+                    Light(1, "Front Right", 25, "Rest of Room"),
+                    Light(2, "Mid Left", 26, "Rest of Room"),
+                    Light(3, "Mid Right", 27, "Alex"),
+                    Light(4, "Rear Left", 28, "Reading"),
+                    Light(5, "Rear Right", 29, "Kate")
+                ),
+                mapOf(
+                    "All On" to RoomPreset(mapOf("Kate" to 1024, "Reading" to 1024, "Alex" to 1024, "Rest of Room" to 1024)),
+                    "Dim" to RoomPreset(mapOf("Kate" to 10, "Reading" to 10, "Alex" to 10, "Rest of Room" to 10)),
+                    "All Off" to RoomPreset(mapOf("Kate" to 0, "Reading" to 0, "Alex" to 0, "Rest of Room" to 0)),
+                    "Reading" to RoomPreset(mapOf("Reading" to 50))
+                )
+            )
+        )
     }
 
     private fun runSetup() {

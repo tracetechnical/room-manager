@@ -138,7 +138,7 @@ class SetupService(private val mqttService: MqttService,
                 mqttService.publish("lighting/switch/${switch.channel}/name", switch.name)
             }
             room.dimmerGroups.forEach { group ->
-                dimmerGroupRepository.put(group.key, DimmerGroup(group.value.groupIdx, group.value.level))
+                dimmerGroupRepository.put("${room.name}-${group.key}", DimmerGroup(group.value.groupIdx, group.value.level))
                 mqttService.publish("lighting/dimmerGroup/${group.value.groupIdx}/name", group.key)
             }
             room.lights.forEach { light ->

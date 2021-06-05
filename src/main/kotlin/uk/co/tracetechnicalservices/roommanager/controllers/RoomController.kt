@@ -31,7 +31,7 @@ class RoomController(
             name,
             { r: Room ->
                 r.roomPresets[body.preset]?.dimmerGroupLevels?.forEach { (groupName, level) ->
-                    dimmerGroupRepository.getByName(groupName).ifPresent { group -> group.level = level }
+                    dimmerGroupRepository.getByName("$name-$groupName").ifPresent { group -> group.level = level }
                 }
                 mqttService.publish("lighting/room/${r.name}/preset", body.preset)
             },
@@ -61,7 +61,7 @@ class RoomController(
         return loadRoomByName(
             name,
             { r ->
-                dimmerGroupRepository.getByName(groupName).ifPresent { it.level = body.level }
+                dimmerGroupRepository.getByName("$name-$groupName").ifPresent { it.level = body.level }
                 val group = r.dimmerGroups[groupName]
                 if (group != null) {
                     mqttService.publish("lighting/dimmerGroup/${group.groupIdx}/level", "${body.level}")

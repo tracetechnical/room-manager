@@ -65,7 +65,8 @@ class SetupService(private val mqttService: MqttService,
                     "All On" to RoomPreset(mapOf("Around TV" to 1024, "TV" to 1024, "Sofa" to 1024)),
                     "Dim" to RoomPreset(mapOf("Around TV" to 10, "TV" to 10, "Sofa" to 10)),
                     "All Off" to RoomPreset(mapOf("Around TV" to 0, "TV" to 0, "Sofa" to 0)),
-                    "TV" to RoomPreset(mapOf("Around TV" to 100, "TV" to 0, "Sofa" to 100))
+                    "TV" to RoomPreset(mapOf("Around TV" to 100, "TV" to 0, "Sofa" to 100)),
+                    "Reading" to RoomPreset(mapOf("Sofa" to 100))
                 )
             ))
         roomRepository.put(
@@ -94,7 +95,7 @@ class SetupService(private val mqttService: MqttService,
                     "Dim" to RoomPreset(mapOf("Table" to 10, "Reading Corner" to 10, "Rest of Room" to 10)),
                     "All Off" to RoomPreset(mapOf("Table" to 0, "Reading Corner" to 0, "Rest of Room" to 0)),
                     "Dinner" to RoomPreset(mapOf("Table" to 1024, "Reading Corner" to 0, "Rest of Room" to 0)),
-                    "Reading Corner" to RoomPreset(mapOf("Table" to 0, "Reading Corner" to 1024, "Rest of Room" to 0))
+                    "Reading Corner" to RoomPreset(mapOf("Reading Corner" to 1024))
                 )
             )
         )

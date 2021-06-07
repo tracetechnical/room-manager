@@ -45,7 +45,7 @@ class SetupService(
             room.dimmerGroups.forEach { group ->
                 dimmerGroupRepository.put(
                     "${room.name}-${group.key}",
-                    DimmerGroup(group.value.groupIdx, group.value.level)
+                    group.value
                 )
                 mqttService.publish("lighting/dimmerGroup/${group.value.groupIdx}/name", group.key)
             }

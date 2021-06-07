@@ -27,7 +27,21 @@ class RoomController(
 
     @GetMapping("preset")
     fun getRoomPreset(@PathVariable("name") name: String): String {
-        return loadRoomByName(name, {r -> r.currentPreset}, "")
+        return loadRoomByName(name, { r ->
+            val currentPreset = r.currentPreset
+            var fullMatch = false;
+            if (r.roomPresets.containsKey(currentPreset)) {
+                val preset = r.roomPresets[currentPreset]!!
+                val b = preset.dimmerGroupLevels.map { r.dimmerGroups[it.key]?.level == it.value }
+                fullMatch = b.filter { it }.size == preset.dimmerGroupLevels.size
+            }
+            if(!fullMatch) {
+                r.currentPreset = ""
+                ""
+            } else {
+                currentPreset
+            }
+        }, "")
     }
 
     @PostMapping("preset")
@@ -36,9 +50,10 @@ class RoomController(
             name,
             { r: Room ->
                 r.roomPresets[body.preset]?.dimmerGroupLevels?.forEach { (groupName, level) ->
-                    dimmerGroupRepository.getByName("$name-$groupName").ifPresent { group -> group.level = level }
+                    dimmerGroupRepository.getByName("$name-$groupName").ifPresent { group ->
+                        group.level = level; r.currentPreset = body.preset
+                    }
                 }
-                r.currentPreset = body.preset
                 mqttService.publish("lighting/room/${r.name}/preset", body.preset)
             },
             Unit
@@ -67,6 +82,7 @@ class RoomController(
         return loadRoomByName(
             name,
             { r ->
+                r.currentPreset = ""
                 dimmerGroupRepository.getByName("$name-$groupName").ifPresent { it.level = body.level }
                 val group = r.dimmerGroups[groupName]
                 if (group != null) {
@@ -82,8 +98,9 @@ class RoomController(
         val om = ObjectMapper()
         loadRoomByName(
             name,
-            { room ->
-                val roomGroupIndicies = room.dimmerGroups.values.stream().mapToInt { it.groupIdx }.toArray()
+            { r ->
+                r.currentPreset = ""
+                val roomGroupIndicies = r.dimmerGroups.values.stream().mapToInt { it.groupIdx }.toArray()
                 roomGroupIndicies.forEach { it ->
                     dimmerGroupRepository.getById(it).ifPresent { group -> group.level = body.level }
                 }

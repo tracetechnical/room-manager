@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service
 import uk.co.tracetechnicalservices.roommanager.models.*
 import uk.co.tracetechnicalservices.roommanager.repositories.DimmerGroupRepository
 import uk.co.tracetechnicalservices.roommanager.repositories.RoomRepository
+import java.io.Console
 import java.net.URL
 import java.util.*
 import kotlin.concurrent.fixedRateTimer

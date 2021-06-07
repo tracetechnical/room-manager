@@ -3,6 +3,7 @@ package uk.co.tracetechnicalservices.roommanager.models
 data class Room(
     val id: Int,
     val name: String,
+    var currentPreset: String,
     val switches: List<Switch>,
     val dimmerGroups: Map<String, DimmerGroup>,
     val lights: List<Light>,

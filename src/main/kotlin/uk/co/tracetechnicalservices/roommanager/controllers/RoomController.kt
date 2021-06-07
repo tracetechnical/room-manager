@@ -25,6 +25,11 @@ class RoomController(
         return loadRoomByName(name, { r -> r.roomPresets }, emptyMap())
     }
 
+    @GetMapping("preset")
+    fun getRoomPreset(@PathVariable("name") name: String): String {
+        return loadRoomByName(name, {r -> r.currentPreset}, "")
+    }
+
     @PostMapping("preset")
     fun setRoomPreset(@PathVariable("name") name: String, @RequestBody body: RoomPresetRequest) {
         return loadRoomByName(
@@ -33,6 +38,7 @@ class RoomController(
                 r.roomPresets[body.preset]?.dimmerGroupLevels?.forEach { (groupName, level) ->
                     dimmerGroupRepository.getByName("$name-$groupName").ifPresent { group -> group.level = level }
                 }
+                r.currentPreset = body.preset
                 mqttService.publish("lighting/room/${r.name}/preset", body.preset)
             },
             Unit

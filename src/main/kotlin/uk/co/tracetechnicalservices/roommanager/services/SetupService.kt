@@ -26,16 +26,19 @@ class SetupService(
     }
 
     fun loadConfig() {
-        setup()
+        val data = getConfigData()
+        addConfigToRepository(data)
         runSetup()
         setupSwitches()
     }
 
-    private fun setup() {
-        val configData =
-            obj.readValue<RoomList>(
-                URL("https://raw.githubusercontent.com/tracetechnical/49bw-lx-config/master/config.json")
-            )
+    fun getConfigData(): RoomList {
+        return obj.readValue(
+            URL("https://raw.githubusercontent.com/tracetechnical/49bw-lx-config/master/config.json")
+        )
+    }
+
+    private fun addConfigToRepository(configData: RoomList) {
         configData.rooms.forEach { roomRepository.put(it) }
     }
 

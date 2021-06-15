@@ -5,10 +5,9 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.reactivex.subjects.PublishSubject
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import org.springframework.stereotype.Service
-import uk.co.tracetechnicalservices.roommanager.models.*
+import uk.co.tracetechnicalservices.roommanager.models.RoomList
 import uk.co.tracetechnicalservices.roommanager.repositories.DimmerGroupRepository
 import uk.co.tracetechnicalservices.roommanager.repositories.RoomRepository
-import java.io.Console
 import java.net.URL
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
@@ -23,6 +22,10 @@ class SetupService(
     val obj = jacksonObjectMapper()
 
     init {
+        loadConfig()
+    }
+
+    fun loadConfig() {
         setup()
         runSetup()
         setupSwitches()

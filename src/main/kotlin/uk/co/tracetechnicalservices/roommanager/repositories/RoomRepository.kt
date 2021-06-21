@@ -16,7 +16,7 @@ class RoomRepository {
         return rooms.stream().filter { a -> a.name == name}.findFirst()
     }
 
-    fun put(room: Room): Unit {
+    fun put(room: Room) {
         rooms.add(room)
     }
 }

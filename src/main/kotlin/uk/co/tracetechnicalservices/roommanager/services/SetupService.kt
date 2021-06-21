@@ -90,6 +90,7 @@ class SetupService(
                 }
             }
             .setupActionOnShortPress(1) { mqttService.publish("lighting/room/Living Room/preset", "All On") }
+
         SwitchManager(2, mqttService)
             .setup()
             .setupActionOnPressAndHold {
@@ -98,9 +99,6 @@ class SetupService(
                     (1..3).forEach { mqttService.publish("lighting/dimmerGroup/$it/level", "$level") }
                 }
             }
-            .setupActionOnShortPress(1) { mqttService.publish("lighting/room/Living Room/preset", "All Off") }
-            .setupActionOnShortPress(2) { mqttService.publish("lighting/room/Living Room/preset", "Dim") }
-            .setupActionOnShortPress(3) { mqttService.publish("lighting/room/Living Room/preset", "TV") }
 
         SwitchManager(3, mqttService)
             .setup()
@@ -110,9 +108,6 @@ class SetupService(
                     (4..6).forEach { mqttService.publish("lighting/dimmerGroup/$it/level", "$level") }
                 }
             }
-            .setupActionOnShortPress(1) { mqttService.publish("lighting/room/Dining Room/preset", "All On") }
-            .setupActionOnShortPress(2) { mqttService.publish("lighting/room/Dining Room/preset", "Dinner") }
-            .setupActionOnShortPress(3) { mqttService.publish("lighting/room/Dining Room/preset", "Reading Corner") }
 
         SwitchManager(4, mqttService)
             .setup()
@@ -122,24 +117,5 @@ class SetupService(
                     (4..6).forEach { mqttService.publish("lighting/dimmerGroup/$it/level", "$level") }
                 }
             }
-            .setupActionOnShortPress(1) { mqttService.publish("lighting/room/Dining Room/preset", "All Off") }
-            .setupActionOnShortPress(2) { mqttService.publish("lighting/room/Dining Room/preset", "Dim") }
-            .setupActionOnShortPress(3) { partyMode() }
-    }
-
-    private fun partyMode() {
-        val timers: MutableList<Timer> = emptyList<Timer>().toMutableList()
-        (1..6).forEach { j ->
-            timers.add(
-                fixedRateTimer("N", false, (j * 100).toLong(), 6 * 100) {
-                    (1..6).forEach { i ->
-                        mqttService.publish("lighting/dimmerGroup/$i/level", if (i == j) "1024" else "0")
-                    }
-                }
-            )
-        }
-        Timer().schedule(
-            timerTask { timers.forEach { i -> i.cancel() } }, 10000
-        )
     }
 }

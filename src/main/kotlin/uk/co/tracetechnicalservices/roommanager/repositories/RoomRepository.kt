@@ -19,4 +19,8 @@ class RoomRepository {
     fun put(room: Room) {
         rooms.add(room)
     }
+
+    fun clear() {
+        rooms.removeAll { true }
+    }
 }

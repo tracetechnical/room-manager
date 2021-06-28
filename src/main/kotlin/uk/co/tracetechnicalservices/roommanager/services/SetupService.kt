@@ -10,8 +10,6 @@ import uk.co.tracetechnicalservices.roommanager.repositories.DimmerGroupReposito
 import uk.co.tracetechnicalservices.roommanager.repositories.RoomRepository
 import java.net.URL
 import java.util.*
-import kotlin.concurrent.fixedRateTimer
-import kotlin.concurrent.timerTask
 
 @Service
 class SetupService(
@@ -26,6 +24,7 @@ class SetupService(
     }
 
     fun loadConfig() {
+        roomRepository.clear()
         val data = getConfigData()
         addConfigToRepository(data)
         runSetup()

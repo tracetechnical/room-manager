@@ -15,7 +15,33 @@ import uk.co.tracetechnicalservices.roommanager.MqttSubscriber
 class  MqttService {
     var rxClient: MqttAsyncClient? = null
     var txClient: MqttClient? = null
-    final var listeners: MutableMap<String, PublishSubject<MqttMessage>>
+    val rxPersistence = MemoryPersistence()
+    val txPersistence = MemoryPersistence()
+    var listeners: MutableMap<String, PublishSubject<MqttMessage>> = LinkedHashMap()
+    val mqttCallback = MqttSubscriber(listeners)
+    val broker = "tcp://192.168.10.229:1883"
+    val clientId = "JavaSample22222"
+    val connOpts = MqttConnectOptions()
+
+    init {
+        connOpts.isCleanSession = true
+        connOpts.isAutomaticReconnect = true
+        connOpts.connectionTimeout = 0
+        try {
+            rxClient = MqttAsyncClient(broker, clientId + "rx", rxPersistence)
+            println("Connecting to broker: $broker")
+            connectToRx(connOpts, mqttCallback)
+        } catch (me: MqttException) {
+            handleException(me)
+        }
+        try {
+            txClient = MqttClient(broker, clientId + "tx", txPersistence)
+            println("Connecting to broker: $broker")
+            connectToTx(connOpts)
+        } catch (me: MqttException) {
+            handleException(me)
+        }
+    }
 
     fun registerListener(path: String, publishSubject: PublishSubject<MqttMessage>) {
         try {
@@ -54,37 +80,21 @@ class  MqttService {
         me.printStackTrace()
     }
 
-    init {
-        val rxPersistence = MemoryPersistence()
-        val txPersistence = MemoryPersistence()
-        listeners = LinkedHashMap()
-        val mqttCallback = MqttSubscriber(listeners)
-        val broker = "tcp://192.168.10.229:1883"
-        val clientId = "JavaSample2"
-        try {
-            rxClient = MqttAsyncClient(broker, clientId + "rx", rxPersistence)
-            val connOpts = MqttConnectOptions()
-            connOpts.isCleanSession = true
-            connOpts.connectionTimeout = 0
-            println("Connecting to broker: $broker")
-            val conToken = rxClient!!.connect(connOpts)
-            conToken.waitForCompletion()
-            println("Connected")
-            rxClient!!.setCallback(mqttCallback)
-            println("Set callback")
-        } catch (me: MqttException) {
-            handleException(me)
-        }
-        try {
-            txClient = MqttClient(broker, clientId + "tx", txPersistence)
-            val connOpts = MqttConnectOptions()
-            connOpts.isCleanSession = true
-            connOpts.connectionTimeout = 0
-            println("Connecting to broker: $broker")
-            txClient!!.connect(connOpts)
-            println("Connected")
-        } catch (me: MqttException) {
-            handleException(me)
-        }
+    fun connectToTx(connOpts: MqttConnectOptions) {
+        println("Perform TX connect")
+        txClient!!.connect(connOpts)
+        println("Connected")
+    }
+
+    fun connectToRx(
+        connOpts: MqttConnectOptions,
+        mqttCallback: MqttSubscriber
+    ) {
+        println("Perform RX connect")
+        val conToken = rxClient!!.connect(connOpts)
+        conToken.waitForCompletion()
+        println("Connected")
+        rxClient!!.setCallback(mqttCallback)
+        println("Set callback")
     }
 }

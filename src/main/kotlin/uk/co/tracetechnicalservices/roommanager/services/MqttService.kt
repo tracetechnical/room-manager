@@ -9,15 +9,15 @@ import java.util.*
 
 @Service
 class MqttService {
-    final var rxClient: MqttAsyncClient? = null
-    final var txClient: MqttClient? = null
-    final val rxPersistence = MemoryPersistence()
-    final val txPersistence = MemoryPersistence()
-    final var listeners: MutableMap<String, PublishSubject<MqttMessage>> = LinkedHashMap()
-    final val mqttCallback = MqttSubscriber(listeners)
-    final val broker = "tcp://192.168.10.229:1883"
-    final val clientId = "JavaSample22222"
-    final val connOpts = MqttConnectOptions()
+    private val broker = "tcp://192.168.10.229:1883"
+    private val clientId = "RoomManager"
+    private val connOpts = MqttConnectOptions()
+    private var rxClient: MqttAsyncClient? = null
+    private var txClient: MqttClient? = null
+    private val rxPersistence = MemoryPersistence()
+    private val txPersistence = MemoryPersistence()
+    private var listeners: MutableMap<String, PublishSubject<MqttMessage>> = LinkedHashMap()
+    private val mqttCallback = MqttSubscriber(listeners)
 
     init {
         connOpts.isCleanSession = true
@@ -26,7 +26,7 @@ class MqttService {
         try {
             rxClient = MqttAsyncClient(broker, clientId + "rx", rxPersistence)
             println("Connecting to broker (Rx): $broker")
-            connectToRx(mqttCallback)
+            connectToRx()
         } catch (me: MqttException) {
             handleException(me)
         }
@@ -76,13 +76,13 @@ class MqttService {
         me.printStackTrace()
     }
 
-    final fun connectToTx() {
+    private fun connectToTx() {
         println("Perform TX connect")
         txClient!!.connect(connOpts)
         println("Connected")
     }
 
-    final fun connectToRx(mqttCallback: MqttSubscriber) {
+    private fun connectToRx() {
         println("Perform RX connect")
         val conToken = rxClient!!.connect(connOpts)
         conToken.waitForCompletion()

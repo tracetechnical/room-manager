@@ -63,8 +63,10 @@ class SetupService(
             room.roomPresets.forEach { roomPreset ->
                 val ph: PublishSubject<MqttMessage> = PublishSubject.create()
                 mqttService.registerListener("lighting/room/${room.name}/preset", ph)
-                ph.subscribe { a: MqttMessage ->
-                    val preset = room.roomPresets.get(a.toString())
+                ph.subscribe { presetNameMsg: MqttMessage ->
+                    val presetName = presetNameMsg.toString()
+                    val preset = room.roomPresets[presetName]
+                    room.currentPreset = presetName
                     preset?.dimmerGroupLevels?.forEach {
                         val groupIdx = room.dimmerGroups[it.key]?.groupIdx
                         mqttService.publish("lighting/dimmerGroup/$groupIdx/level", "${it.value}")

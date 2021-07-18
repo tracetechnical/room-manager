@@ -69,6 +69,7 @@ class SetupService(
                     room.currentPreset = presetName
                     preset?.dimmerGroupLevels?.forEach {
                         val groupIdx = room.dimmerGroups[it.key]?.groupIdx
+                        room.dimmerGroups[it.key]?.level = it.value
                         mqttService.publish("lighting/dimmerGroup/$groupIdx/level", "${it.value}")
                     }
                 }

@@ -66,6 +66,7 @@ class SetupService(
                 ph.subscribe { presetNameMsg: MqttMessage ->
                     val presetName = presetNameMsg.toString()
                     val preset = room.roomPresets[presetName]
+                    println("XX" + presetName + "YY")
                     room.currentPreset = presetName
                     preset?.dimmerGroupLevels?.forEach {
                         val groupIdx = room.dimmerGroups[it.key]?.groupIdx

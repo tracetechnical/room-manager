@@ -42,7 +42,7 @@ class SetupService(
     }
 
     private fun runSetup() {
-        roomRepository.getAll().stream().forEach { room ->
+        roomRepository.getAll().forEach { room ->
             room.switches.forEach { switch ->
                 mqttService.publish("lighting/switch/${switch.channel}/action", switch.action.toString())
                 mqttService.publish("lighting/switch/${switch.channel}/name", switch.name)
@@ -66,7 +66,6 @@ class SetupService(
                 ph.subscribe { presetNameMsg: MqttMessage ->
                     val presetName = presetNameMsg.toString()
                     val preset = room.roomPresets[presetName]
-                    println("XX" + presetName + "YY")
                     room.currentPreset = presetName
                     preset?.dimmerGroupLevels?.forEach {
                         val groupIdx = room.dimmerGroups[it.key]?.groupIdx

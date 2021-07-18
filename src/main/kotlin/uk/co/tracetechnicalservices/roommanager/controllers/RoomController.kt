@@ -30,13 +30,11 @@ class RoomController(
         return loadRoomByName(name, { r ->
             val currentPreset = r.currentPreset
             var fullMatch = false;
-            println("X1X" + currentPreset + "Y1Y")
             if (r.roomPresets.containsKey(currentPreset)) {
                 val preset = r.roomPresets[currentPreset]!!
                 val b = preset.dimmerGroupLevels.map { r.dimmerGroups[it.key]?.level == it.value }
                 fullMatch = b.filter { it }.size == preset.dimmerGroupLevels.size
             }
-            println("X2X" + fullMatch + "Y2Y")
             if(!fullMatch) {
                 r.currentPreset = ""
                 ""

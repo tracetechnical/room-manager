@@ -23,6 +23,8 @@ class MqttService {
         connOpts.isCleanSession = true
         connOpts.isAutomaticReconnect = true
         connOpts.connectionTimeout = 0
+        connOpts.keepAliveInterval = 0
+
         try {
             rxClient = MqttAsyncClient(broker, clientId + "rx", rxPersistence)
             println("Connecting to broker (Rx): $broker")

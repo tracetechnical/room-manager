@@ -1,7 +1,7 @@
 FROM gradle:7.0.2-jdk11 AS build
 COPY --chown=gradle:gradle . /home/gradle/src
 WORKDIR /home/gradle/src
-RUN sudo apt-get install haveged -y
+RUN apt-get install haveged -y
 RUN gradle build --no-daemon
 
 FROM openjdk:11-jre-slim

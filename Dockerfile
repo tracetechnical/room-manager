@@ -1,3 +1,4 @@
+ARG ARCH=
 FROM gradle:7.0.2-jdk11 AS build
 COPY --chown=gradle:gradle . /home/gradle/src
 WORKDIR /home/gradle/src
@@ -5,7 +6,7 @@ RUN apt-get update
 RUN apt-get install haveged -y
 RUN gradle build --no-daemon
 
-FROM arm64v8/openjdk:11-jre-slim
+FROM ${ARCH}openjdk:11-jre-slim
 
 EXPOSE 8080
 

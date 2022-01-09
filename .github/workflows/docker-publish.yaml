@@ -43,6 +43,7 @@ jobs:
           echo VERSION=$VERSION >> $GITHUB_ENV
 
       - run: |
+          docker run --rm --privileged hypriot/qemu-register
           docker login -u pheonixtech -p ${{ secrets.CANISTER_PASSWORD }} registry.gitlab.com
           # AMD64
           docker build -t registry.gitlab.com/pheonixtech/roommanager:manifest-amd64 --build-arg ARCH=amd64/ .

@@ -43,14 +43,56 @@ jobs:
           echo VERSION=$VERSION >> $GITHUB_ENV
 
       - run: |
-          docker run --rm --privileged hypriot/qemu-register
-      - uses: whoan/docker-build-with-cache-action@v5
-        with:
-          username: "pheonixtech"
-          password: "${{ secrets.CANISTER_PASSWORD }}"
-          registry: registry.gitlab.com
-          #or
-          #registry: ghcr.io
-          image_name: "pheonixtech/roommanager"
-          stages_image_name: "pheonixtech/roommanager"
-          image_tag: "${{ env.VERSION}}"
+          name: Docker
+
+on:
+  create:
+      tags:
+        - v*
+  push:
+    # Publish `master` as Docker `latest` image.
+    branches:
+      - master
+
+    # Publish `v1.2.3` tags as releases.
+    tags:
+      - v*
+
+  # Run tests for any PRs.
+  pull_request:
+
+env:
+  IMAGE_NAME: image
+
+jobs:
+  # See also https://docs.docker.com/docker-hub/builds/automated-testing/
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Prepare image info
+        run: |
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "master" ] && VERSION=latest
+          echo VERSION=$VERSION >> $GITHUB_ENV
+      - name: multiarch build
+        run: |
+          docker login -u pheonixtech -p ${{ secrets.CANISTER_PASSWORD }} registry.gitlab.com
+          # AMD64
+          docker build -t registry.gitlab.com/pheonixtech/roommanager:manifest-amd64 --build-arg ARCH=amd64/ .
+          docker push "registry.gitlab.com/pheonixtech/roommanager:manifest-amd64"
+
+          # ARM32V7
+          docker build -t registry.gitlab.com/pheonixtech/roommanager:manifest-arm32v7 --build-arg ARCH=arm32v7/ .
+          docker push "registry.gitlab.com/pheonixtech/roommanager:manifest-arm32v7"
+
+          # ARM64V8
+          docker build -t registry.gitlab.com/pheonixtech/roommanager:manifest-arm64v8 --build-arg ARCH=arm64v8/ .
+          docker push "registry.gitlab.com/pheonixtech/roommanager:manifest-arm64v8"
+          docker manifest create "registry.gitlab.com/pheonixtech/roommanager:${{ env.VERSION }}" --amend "registry.gitlab.com/pheonixtech/roommanager:manifest-amd64" --amend "registry.gitlab.com/pheonixtech/roommanager:manifest-arm32v7" --amend "registry.gitlab.com/pheonixtech/roommanager:manifest-arm64v8"
+          docker manifest push registry.gitlab.com/pheonixtech/roommanager:${{ env.VERSION }}
+

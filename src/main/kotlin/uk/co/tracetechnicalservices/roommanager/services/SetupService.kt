@@ -4,12 +4,13 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.reactivex.subjects.PublishSubject
 import org.eclipse.paho.client.mqttv3.MqttMessage
+import org.springframework.boot.context.event.ApplicationReadyEvent
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import uk.co.tracetechnicalservices.roommanager.models.RoomList
 import uk.co.tracetechnicalservices.roommanager.repositories.DimmerGroupRepository
 import uk.co.tracetechnicalservices.roommanager.repositories.RoomRepository
 import java.net.URL
-import java.util.*
 
 @Service
 class SetupService(
@@ -19,7 +20,10 @@ class SetupService(
 ) {
     val obj = jacksonObjectMapper()
 
-    init {
+
+    @EventListener
+    fun setup(e: ApplicationReadyEvent) {
+        mqttService.connect()
         loadConfig()
     }
 

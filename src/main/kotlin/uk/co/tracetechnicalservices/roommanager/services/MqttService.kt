@@ -3,12 +3,14 @@ package uk.co.tracetechnicalservices.roommanager.services
 import io.reactivex.subjects.PublishSubject
 import org.eclipse.paho.client.mqttv3.*
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
+import org.springframework.boot.availability.AvailabilityChangeEvent
+import org.springframework.boot.availability.LivenessState
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import uk.co.tracetechnicalservices.roommanager.MqttSubscriber
-import java.util.*
 
 @Service
-class MqttService {
+class MqttService(val eventPublisher: ApplicationEventPublisher) {
     private val broker = "tcp://192.168.10.229:1883"
     private val clientId = "RoomManager"
     private val connOpts = MqttConnectOptions()
@@ -24,7 +26,9 @@ class MqttService {
         connOpts.isAutomaticReconnect = true
         connOpts.connectionTimeout = 0
         connOpts.keepAliveInterval = 0
+    }
 
+    fun connect() {
         try {
             rxClient = MqttAsyncClient(broker, clientId + "rx", rxPersistence)
             println("Connecting to broker (Rx): $broker")
@@ -70,6 +74,7 @@ class MqttService {
     }
 
     private fun handleException(me: MqttException) {
+        AvailabilityChangeEvent.publish(this.eventPublisher, me, LivenessState.BROKEN)
         println("reason " + me.reasonCode)
         println("msg " + me.message)
         println("loc " + me.localizedMessage)

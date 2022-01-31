@@ -4,8 +4,12 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.reactivex.subjects.PublishSubject
 import org.eclipse.paho.client.mqttv3.MqttMessage
+import org.springframework.boot.availability.AvailabilityChangeEvent
+import org.springframework.boot.availability.LivenessState
 import org.springframework.boot.context.event.ApplicationReadyEvent
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.event.EventListener
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import uk.co.tracetechnicalservices.roommanager.models.RoomList
 import uk.co.tracetechnicalservices.roommanager.repositories.DimmerGroupRepository
@@ -16,15 +20,31 @@ import java.net.URL
 class SetupService(
     private val mqttService: MqttService,
     private val roomRepository: RoomRepository,
-    private val dimmerGroupRepository: DimmerGroupRepository
+    private val dimmerGroupRepository: DimmerGroupRepository,
+    private val eventPublisher: ApplicationEventPublisher
 ) {
     val obj = jacksonObjectMapper()
-
+    val heartbeatReceiver: PublishSubject<MqttMessage> = PublishSubject.create()
+    var tickCounter = 0
 
     @EventListener
     fun setup(e: ApplicationReadyEvent) {
         mqttService.connect()
         loadConfig()
+        mqttService.registerListener("time/tick", heartbeatReceiver)
+        heartbeatReceiver.subscribe {
+            tickCounter = 0
+        }
+    }
+
+    @Scheduled(fixedDelay = 1000)
+    fun heartbeat() {
+        if(tickCounter == 30) {
+            AvailabilityChangeEvent.publish(this.eventPublisher, Exception("Heartbeat lost"), LivenessState.BROKEN)
+        }
+        if(tickCounter <= 30) {
+            tickCounter++
+        }
     }
 
     fun loadConfig() {

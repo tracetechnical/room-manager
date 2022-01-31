@@ -25,7 +25,7 @@ class MqttService(val eventPublisher: ApplicationEventPublisher) {
         connOpts.isCleanSession = true
         connOpts.isAutomaticReconnect = true
         connOpts.connectionTimeout = 0
-        connOpts.keepAliveInterval = 0
+        connOpts.keepAliveInterval = 5
     }
 
     fun connect() {

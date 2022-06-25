@@ -33,6 +33,7 @@ class SetupService(
         loadConfig()
         mqttService.registerListener("time/tick", heartbeatReceiver)
         heartbeatReceiver.subscribe {
+            print("Got a tick")
             tickCounter = 0
         }
     }
@@ -40,7 +41,7 @@ class SetupService(
     @Scheduled(fixedDelay = 1000)
     fun heartbeat() {
         if(tickCounter == 30) {
-            AvailabilityChangeEvent.publish(this.eventPublisher, Exception("Heartbeat lost"), LivenessState.BROKEN)
+//            AvailabilityChangeEvent.publish(this.eventPublisher, Exception("Heartbeat lost"), LivenessState.BROKEN)
         }
         if(tickCounter <= 30) {
             tickCounter++

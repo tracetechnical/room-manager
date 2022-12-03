@@ -59,6 +59,7 @@ class MqttService(private val eventPublisher: ApplicationEventPublisher) {
         try {
             val message = MqttMessage(content.toByteArray())
             message.qos = 0
+            message.retained = true
             txClient!!.publish(topic, message)
         } catch (me: MqttException) {
             handleException(me)

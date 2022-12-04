@@ -33,15 +33,13 @@ class MqttService(private val eventPublisher: ApplicationEventPublisher) {
             rxClient = MqttAsyncClient(broker, clientId + "rx", rxPersistence)
             println("Connecting to broker (Rx): $broker")
             connectToRx()
-        } catch (me: MqttException) {
-            handleException(me)
-        }
-        try {
+
             txClient = MqttClient(broker, clientId + "tx", txPersistence)
             println("Connecting to broker (Tx): $broker")
             connectToTx()
         } catch (me: MqttException) {
-            handleException(me)
+            println("Did not get a connection, exiting to restart service")
+            System.exit(1)
         }
     }
 
@@ -82,6 +80,11 @@ class MqttService(private val eventPublisher: ApplicationEventPublisher) {
         println("cause " + me.cause)
         println("excep $me")
         me.printStackTrace()
+
+        if (me.getReasonCode() === 32104) {
+            println("Client not connected, restarting service")
+            System.exit(2)
+        }
     }
 
     private fun connectToTx() {

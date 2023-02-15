@@ -12,7 +12,7 @@ import uk.co.tracetechnicalservices.roommanager.MqttSubscriber
 @Service
 class MqttService(private val eventPublisher: ApplicationEventPublisher) {
     private val broker = "tcp://mqtt.io.home:1883"
-    private val clientId = "RoomManager"
+    private val clientId = "RoomManager-${java.util.UUID.randomUUID().toString()}"
     private val connOpts = MqttConnectOptions()
     private var rxClient: MqttAsyncClient? = null
     private var txClient: MqttClient? = null

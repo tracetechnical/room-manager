@@ -34,6 +34,7 @@ dependencies {
     }
     implementation("org.springframework.boot:spring-boot-starter-undertow")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot.experimental:spring-boot-lazy-actuator")
     implementation("org.springframework:spring-context-indexer")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")

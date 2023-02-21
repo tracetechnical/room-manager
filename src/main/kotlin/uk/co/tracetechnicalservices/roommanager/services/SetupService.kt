@@ -15,6 +15,9 @@ import uk.co.tracetechnicalservices.roommanager.models.RoomList
 import uk.co.tracetechnicalservices.roommanager.repositories.DimmerGroupRepository
 import uk.co.tracetechnicalservices.roommanager.repositories.RoomRepository
 import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.TimeZone
+import java.util.Date
 
 @Service
 class SetupService(
@@ -47,6 +50,13 @@ class SetupService(
         }
     }
 
+    @Scheduled(fixedDelay = 5000)
+    fun lifepulse() {
+        val date = Date(System.currentTimeMillis())
+        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+        sdf.timeZone = TimeZone.getTimeZone("GMT")
+        mqttService.publish("life/roommanager",sdf.format(date))
+    }
     fun loadConfig() {
         roomRepository.clear()
         val data = getConfigData()

@@ -54,13 +54,15 @@ class MqttService(private val eventPublisher: ApplicationEventPublisher) {
     }
 
     fun publish(topic: String, content: String) {
-        try {
-            val message = MqttMessage(content.toByteArray())
-            message.qos = 0
-            message.setRetained(true)
-            txClient!!.publish(topic, message)
-        } catch (me: MqttException) {
-            handleException(me)
+        if(txClient != null && txClient!!.isConnected) {
+            try {
+                val message = MqttMessage(content.toByteArray())
+                message.qos = 0
+                message.setRetained(true)
+                txClient!!.publish(topic, message)
+            } catch (me: MqttException) {
+                handleException(me)
+            }
         }
     }
 

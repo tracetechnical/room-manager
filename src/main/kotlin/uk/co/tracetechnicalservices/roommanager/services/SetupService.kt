@@ -54,6 +54,7 @@ class SetupService(
         }
         masterReceiver.subscribe {
             master = String(it.message.payload)
+            println("Master is $master")
         }
         masterLifeReceiver.subscribe {
             masterLife = String(it.message.payload)
@@ -69,8 +70,8 @@ class SetupService(
             if (d < 20) {
                 if(!hostList.containsKey(name)) {
                     println("${name} is alive")
-                    hostList[name] = time
                 }
+                hostList[name] = time
                 if(deadHostSet.contains(name)) {
                     deadHostSet.remove(name)
                 }
@@ -122,7 +123,6 @@ class SetupService(
         var date = Instant.parse(timestamp)
         var now = Instant.now()
         var d = (now.toEpochMilli() - date.toEpochMilli()) / 1000
-        println(d)
         return d > 20
     }
     fun takeOwnership() {

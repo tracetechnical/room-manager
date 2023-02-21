@@ -64,9 +64,9 @@ class MqttService(private val eventPublisher: ApplicationEventPublisher) {
     }
 
     fun publish(topic: String, content: String) {
-        if(!transmitEnabled && topic.contains("apps/roommanager/")) {
-            println("Using life topic bypass")
-        }
+//        if(!transmitEnabled && topic.contains("apps/roommanager/")) {
+//            println("Using life topic bypass")
+//        }
         if(transmitEnabled || topic.contains("apps/roommanager/")) {
             if (txClient != null && txClient!!.isConnected) {
                 try {

@@ -97,17 +97,34 @@ class SetupService(
                 var now = Instant.now()
                 var d = (now.toEpochMilli() - date.toEpochMilli()) / 1000
                 if (d > 20) {
-                    var topHost = hostList.keys.sorted()[0]
-                    if(topHost == hostname) {
-                        takeOwnership()
+                    var availableHosts = hostList.filter { !isDead(it.value) }.keys.sorted()
+                    println("-------- Candidates -------")
+                    availableHosts.forEach{ println(it)}
+                    println("---------- Deads ----------")
+                    hostList.filter { isDead(it.value) }.forEach{ println(it)}
+                    println("---------------------------")
+                    if(availableHosts.size > 0) {
+                        var topHost = availableHosts[0]
+                        if (topHost == hostname) {
+                            takeOwnership()
+                        } else {
+                            println("$topHost should take over")
+                        }
                     } else {
-                        println("$topHost should take over")
+                        println("no available hosts")
                     }
                 }
             }
         }
     }
 
+    fun isDead(timestamp: String): Boolean {
+        var date = Instant.parse(timestamp)
+        var now = Instant.now()
+        var d = (now.toEpochMilli() - date.toEpochMilli()) / 1000
+        println(d)
+        return d > 20
+    }
     fun takeOwnership() {
         println("$hostname, taking ownership due to failed master")
         mqttService.publish("apps/roommanager/master/host", hostname)

@@ -57,6 +57,7 @@ class SetupService(
         sdf.timeZone = TimeZone.getTimeZone("GMT")
         mqttService.publish("life/roommanager",sdf.format(date))
     }
+
     fun loadConfig() {
         roomRepository.clear()
         val data = getConfigData()

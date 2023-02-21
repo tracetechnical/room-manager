@@ -8,17 +8,19 @@ import org.springframework.boot.availability.LivenessState
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import uk.co.tracetechnicalservices.roommanager.MqttSubscriber
+import uk.co.tracetechnicalservices.roommanager.models.MqttMessageWithTopic
 
 @Service
 class MqttService(private val eventPublisher: ApplicationEventPublisher) {
+    private var transmitEnabled = false
     private val broker = "tcp://mqtt.io.home:1883"
-    private val clientId = "RoomManager-${java.util.UUID.randomUUID().toString()}"
+    private val clientId = "RoomManageraaa-${java.util.UUID.randomUUID().toString()}"
     private val connOpts = MqttConnectOptions()
     private var rxClient: MqttAsyncClient? = null
     private var txClient: MqttClient? = null
     private val rxPersistence = MemoryPersistence()
     private val txPersistence = MemoryPersistence()
-    private var listeners: MutableMap<String, PublishSubject<MqttMessage>> = LinkedHashMap()
+    private var listeners: MutableMap<String, PublishSubject<MqttMessageWithTopic>> = LinkedHashMap()
     private val mqttCallback = MqttSubscriber(listeners)
 
     init {
@@ -26,6 +28,13 @@ class MqttService(private val eventPublisher: ApplicationEventPublisher) {
         connOpts.isAutomaticReconnect = true
         connOpts.connectionTimeout = 0
         connOpts.keepAliveInterval = 0
+    }
+
+    fun setMaster() {
+        transmitEnabled = true
+    }
+    fun unsetMaster() {
+        transmitEnabled = false
     }
 
     fun connect() {
@@ -43,8 +52,9 @@ class MqttService(private val eventPublisher: ApplicationEventPublisher) {
         }
     }
 
-    fun registerListener(path: String, publishSubject: PublishSubject<MqttMessage>) {
+    fun registerListener(path: String, publishSubject: PublishSubject<MqttMessageWithTopic>) {
         try {
+            println(path)
             rxClient!!.subscribe(path, 0)
             listeners[path] = publishSubject
             println(">> $path")
@@ -54,14 +64,19 @@ class MqttService(private val eventPublisher: ApplicationEventPublisher) {
     }
 
     fun publish(topic: String, content: String) {
-        if(txClient != null && txClient!!.isConnected) {
-            try {
-                val message = MqttMessage(content.toByteArray())
-                message.qos = 0
-                message.setRetained(true)
-                txClient!!.publish(topic, message)
-            } catch (me: MqttException) {
-                handleException(me)
+        if(!transmitEnabled && topic.contains("apps/roommanager/")) {
+            println("Using life topic bypass")
+        }
+        if(transmitEnabled || topic.contains("apps/roommanager/")) {
+            if (txClient != null && txClient!!.isConnected) {
+                try {
+                    val message = MqttMessage(content.toByteArray())
+                    message.qos = 0
+                    message.isRetained = true
+                    txClient!!.publish(topic, message)
+                } catch (me: MqttException) {
+                    handleException(me)
+                }
             }
         }
     }
@@ -102,5 +117,13 @@ class MqttService(private val eventPublisher: ApplicationEventPublisher) {
         println("Connected")
         rxClient!!.setCallback(mqttCallback)
         println("Set callback")
+    }
+
+    fun isConnected(): Boolean {
+        if(rxClient == null) {
+            return false
+        }
+        return rxClient!!.isConnected
+
     }
 }

@@ -11,13 +11,15 @@ import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.event.EventListener
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import uk.co.tracetechnicalservices.roommanager.models.MqttMessageWithTopic
 import uk.co.tracetechnicalservices.roommanager.models.RoomList
 import uk.co.tracetechnicalservices.roommanager.repositories.DimmerGroupRepository
 import uk.co.tracetechnicalservices.roommanager.repositories.RoomRepository
+import java.net.InetAddress
 import java.net.URL
 import java.text.SimpleDateFormat
-import java.util.TimeZone
-import java.util.Date
+import java.time.Instant
+import java.util.*
 
 @Service
 class SetupService(
@@ -27,17 +29,88 @@ class SetupService(
     private val eventPublisher: ApplicationEventPublisher
 ) {
     val obj = jacksonObjectMapper()
-    val heartbeatReceiver: PublishSubject<MqttMessage> = PublishSubject.create()
+    val heartbeatReceiver: PublishSubject<MqttMessageWithTopic> = PublishSubject.create()
+    val masterReceiver: PublishSubject<MqttMessageWithTopic> = PublishSubject.create()
+    val masterLifeReceiver: PublishSubject<MqttMessageWithTopic> = PublishSubject.create()
+    val hostsReceiver: PublishSubject<MqttMessageWithTopic> = PublishSubject.create()
     var tickCounter = 0
+    var master = ""
+    var masterLife = ""
+    val hostname = InetAddress.getLocalHost().hostName!!
+    var hostList: MutableMap<String,String> = mutableMapOf()
+    var deadHostSet: MutableSet<String> = mutableSetOf()
 
     @EventListener
     fun setup(e: ApplicationReadyEvent) {
         mqttService.connect()
+        while(!mqttService.isConnected())
         loadConfig()
         mqttService.registerListener("time/tick", heartbeatReceiver)
+        mqttService.registerListener("apps/roommanager/master/host", masterReceiver)
+        mqttService.registerListener("apps/roommanager/master/life", masterLifeReceiver)
+        mqttService.registerListener("apps/roommanager/master/candidates/+", hostsReceiver)
         heartbeatReceiver.subscribe {
             tickCounter = 0
         }
+        masterReceiver.subscribe {
+            master = String(it.message.payload)
+        }
+        masterLifeReceiver.subscribe {
+            masterLife = String(it.message.payload)
+        }
+        hostsReceiver.subscribe {
+            val parts = it.topic.split("/")
+            val name = parts[parts.size - 1]
+            val time = String(it.message.payload)
+
+            var date = Instant.parse(time)
+            var now = Instant.now()
+            var d = (now.toEpochMilli() - date.toEpochMilli()) / 1000
+            if (d < 20) {
+                if(!hostList.containsKey(name)) {
+                    println("${name} is alive")
+                    hostList[name] = time
+                }
+                if(deadHostSet.contains(name)) {
+                    deadHostSet.remove(name)
+                }
+            } else {
+                if(!deadHostSet.contains(name)) {
+                    println("${name} is dead")
+                    deadHostSet.add(name)
+                }
+                if(hostList.containsKey(name)) {
+                    hostList.remove(name)
+                }
+            }
+        }
+    }
+
+    @Scheduled(initialDelay = 30000, fixedDelay = 5000)
+    fun checkMaster() {
+        if(master === "") {
+            println("No master set")
+            takeOwnership()
+        } else {
+            if(master != hostname) {
+                var date = Instant.parse(masterLife)
+                var now = Instant.now()
+                var d = (now.toEpochMilli() - date.toEpochMilli()) / 1000
+                if (d > 20) {
+                    var topHost = hostList.keys.sorted()[0]
+                    if(topHost == hostname) {
+                        takeOwnership()
+                    } else {
+                        println("$topHost should take over")
+                    }
+                }
+            }
+        }
+    }
+
+    fun takeOwnership() {
+        println("$hostname, taking ownership due to failed master")
+        mqttService.publish("apps/roommanager/master/host", hostname)
     }
 
     @Scheduled(fixedDelay = 1000)
@@ -55,7 +128,19 @@ class SetupService(
         val date = Date(System.currentTimeMillis())
         val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
         sdf.timeZone = TimeZone.getTimeZone("GMT")
-        mqttService.publish("life/roommanager",sdf.format(date))
+
+        mqttService.publish("apps/roommanager/master/candidates/$hostname",sdf.format(date))
+        if(isMaster()) {
+            mqttService.publish("apps/roommanager/master/life", sdf.format(date))
+            mqttService.publish("apps/roommanager/life", sdf.format(date))
+            mqttService.setMaster()
+        } else {
+            mqttService.unsetMaster()
+        }
+    }
+
+    private fun isMaster(): Boolean {
+        return master == hostname
     }
 
     fun loadConfig() {
@@ -96,10 +181,10 @@ class SetupService(
                 mqttService.publish("lighting/dmx/${light.dmxPairIdx}/groupName", light.groupName)
             }
             room.roomPresets.forEach { roomPreset ->
-                val ph: PublishSubject<MqttMessage> = PublishSubject.create()
+                val ph: PublishSubject<MqttMessageWithTopic> = PublishSubject.create()
                 mqttService.registerListener("lighting/room/${room.name}/preset", ph)
-                ph.subscribe { presetNameMsg: MqttMessage ->
-                    val presetName = presetNameMsg.toString()
+                ph.subscribe { presetNameMsg: MqttMessageWithTopic ->
+                    val presetName = presetNameMsg.message.payload.toString()
                     val preset = room.roomPresets[presetName]
                     room.currentPreset = presetName
                     preset?.dimmerGroupLevels?.forEach {

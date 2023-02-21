@@ -2,15 +2,16 @@ package uk.co.tracetechnicalservices.roommanager.services
 
 import io.reactivex.subjects.PublishSubject
 import org.eclipse.paho.client.mqttv3.MqttMessage
+import uk.co.tracetechnicalservices.roommanager.models.MqttMessageWithTopic
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
 class SwitchManager(channelId: Int, private val mqttService: MqttService) {
     val scheduledExecutorService = Executors.newScheduledThreadPool(5)
-    var longPressSubject: PublishSubject<MqttMessage> = PublishSubject.create()
-    var shortPressSubject: PublishSubject<MqttMessage> = PublishSubject.create()
-    var toggleSubject: PublishSubject<MqttMessage> = PublishSubject.create()
+    var longPressSubject: PublishSubject<MqttMessageWithTopic> = PublishSubject.create()
+    var shortPressSubject: PublishSubject<MqttMessageWithTopic> = PublishSubject.create()
+    var toggleSubject: PublishSubject<MqttMessageWithTopic> = PublishSubject.create()
     var pressAndHoldEnabled = false
     var stateChangeComplete = false
     var channelRoot = "lighting/switch/$channelId"
@@ -25,14 +26,14 @@ class SwitchManager(channelId: Int, private val mqttService: MqttService) {
         var scheduledFuture: ScheduledFuture<*> = scheduledExecutorService.schedule({}, 0, TimeUnit.MILLISECONDS)
         scheduledFuture.cancel(true)
 
-        longPressSubject.subscribe { msg: MqttMessage ->
-            if (msg.toString() == "1") {
+        longPressSubject.subscribe { msg: MqttMessageWithTopic ->
+            if (msg.message.payload.toString() == "1") {
                 pressAndHoldEnabled = true;
             }
         }
 
-        toggleSubject.subscribe { msg: MqttMessage ->
-            if (msg.toString() == "true") {
+        toggleSubject.subscribe { msg: MqttMessageWithTopic ->
+            if (msg.message.payload.toString() == "true") {
                 scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(
                     {
                         handleScheduledCheck()
@@ -51,16 +52,16 @@ class SwitchManager(channelId: Int, private val mqttService: MqttService) {
             }
         }
 
-        shortPressSubject.subscribe { a: MqttMessage ->
+        shortPressSubject.subscribe { a: MqttMessageWithTopic ->
             shortActions.entries.stream().forEach { b ->
-                if(a.toString() == "${b.key}") {
+                if(a.message.payload.toString() == "${b.key}") {
                     b.value()
                 }
             }
         }
-        longPressSubject.subscribe { a: MqttMessage ->
+        longPressSubject.subscribe { a: MqttMessageWithTopic ->
             longActions.entries.stream().forEach { b ->
-                if(a.toString() == "${b.key}") {
+                if(a.message.payload.toString() == "${b.key}") {
                     b.value()
                 }
             }
@@ -87,13 +88,13 @@ class SwitchManager(channelId: Int, private val mqttService: MqttService) {
     fun setupActionOnPressAndHold(b: () -> Unit): SwitchManager {
         var scheduledFuture: ScheduledFuture<*> = scheduledExecutorService.schedule({}, 0, TimeUnit.MILLISECONDS)
         scheduledFuture.cancel(true)
-        val ph = PublishSubject.create<MqttMessage>()
+        val ph = PublishSubject.create<MqttMessageWithTopic>()
         mqttService.registerListener("$channelRoot/pressAndHold", ph)
-        ph.subscribe { a: MqttMessage ->
-            if(a.toString() == "true") {
+        ph.subscribe { a: MqttMessageWithTopic ->
+            if(a.message.payload.toString() == "true") {
                 scheduledFuture = scheduledExecutorService.scheduleAtFixedRate({ b() }, 0, 100, TimeUnit.MILLISECONDS)
             }
-            if(a.toString() == "false") {
+            if(a.message.payload.toString() == "false") {
                 if(!scheduledFuture.isCancelled) {
                     scheduledFuture.cancel(true);
                 }

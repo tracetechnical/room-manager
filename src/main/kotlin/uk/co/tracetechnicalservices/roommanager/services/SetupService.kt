@@ -54,7 +54,7 @@ class SetupService(
         }
         masterReceiver.subscribe {
             master = String(it.message.payload)
-            println("Master is $master")
+            println("-----> Master is $master")
         }
         masterLifeReceiver.subscribe {
             masterLife = String(it.message.payload)

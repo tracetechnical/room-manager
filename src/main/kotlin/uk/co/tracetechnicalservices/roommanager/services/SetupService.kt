@@ -83,7 +83,7 @@ class SetupService(
         }
     }
 
-    @Scheduled(initialDelay = 30000, fixedDelay = 5000)
+    @Scheduled(initialDelay = 60000, fixedDelay = 5000)
     fun checkMaster() {
         if(master === "") {
             println("No master set")

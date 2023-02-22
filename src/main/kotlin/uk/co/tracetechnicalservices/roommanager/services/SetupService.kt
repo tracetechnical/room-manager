@@ -63,11 +63,7 @@ class SetupService(
             val parts = it.topic.split("/")
             val name = parts[parts.size - 1]
             val time = String(it.message.payload)
-
-            var date = Instant.parse(time)
-            var now = Instant.now()
-            var d = (now.toEpochMilli() - date.toEpochMilli()) / 1000
-            if (d < 20) {
+            if (!isDead(time)) {
                 if(!hostList.containsKey(name)) {
                     println("${name} is alive")
                 }
@@ -94,10 +90,7 @@ class SetupService(
             takeOwnership()
         } else {
             if(master != hostname) {
-                var date = Instant.parse(masterLife)
-                var now = Instant.now()
-                var d = (now.toEpochMilli() - date.toEpochMilli()) / 1000
-                if (d > 20) {
+                if (isDead(masterLife)) {
                     var availableHosts = hostList.filter { !isDead(it.value) }.keys.sorted()
                     println("-------- Candidates -------")
                     availableHosts.forEach{ println(it)}
@@ -120,7 +113,11 @@ class SetupService(
     }
 
     fun isDead(timestamp: String): Boolean {
-        var date = Instant.parse(timestamp)
+        var date = Instant.now()
+        try {
+            date = Instant.parse(timestamp)
+        } catch (e: Exception) {
+        }
         var now = Instant.now()
         var d = (now.toEpochMilli() - date.toEpochMilli()) / 1000
         return d > 20

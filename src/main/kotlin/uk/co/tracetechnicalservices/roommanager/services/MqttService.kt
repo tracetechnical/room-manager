@@ -70,10 +70,7 @@ class MqttService(private val eventPublisher: ApplicationEventPublisher) {
         if(transmitEnabled || topic.contains("apps/roommanager/")) {
             if (txClient != null && txClient!!.isConnected) {
                 try {
-                    val message = MqttMessage(content.toByteArray())
-                    message.qos = 0
-                    message.isRetained = true
-                    txClient!!.publish(topic, message)
+                    txClient!!.publish(topic, content.toByteArray(), 0, true)
                 } catch (me: MqttException) {
                     handleException(me)
                 }

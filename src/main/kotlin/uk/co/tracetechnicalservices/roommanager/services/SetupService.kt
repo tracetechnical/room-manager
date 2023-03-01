@@ -43,7 +43,6 @@ class SetupService(
     @EventListener
     fun setup(e: ApplicationReadyEvent) {
         mqttService.connect()
-        while(!mqttService.isConnected())
         loadConfig()
         mqttService.registerListener("time/tick", heartbeatReceiver)
         mqttService.registerListener("apps/roommanager/master/host", masterReceiver)
@@ -54,7 +53,7 @@ class SetupService(
         }
         masterReceiver.subscribe {
             master = String(it.message.payload)
-            println("Master is $master")
+            println("----> Master is $master")
         }
         masterLifeReceiver.subscribe {
             masterLife = String(it.message.payload)

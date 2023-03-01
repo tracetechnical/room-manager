@@ -6,9 +6,10 @@ import org.eclipse.paho.client.mqttv3.MqttCallback
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import uk.co.tracetechnicalservices.roommanager.models.MqttMessageWithTopic
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
 
-class MqttSubscriber(var listeners: Map<String, PublishSubject<MqttMessageWithTopic>>) : MqttCallback {
+class MqttSubscriber(var listeners: ConcurrentHashMap<String, PublishSubject<MqttMessageWithTopic>>) : MqttCallback {
     override fun connectionLost(throwable: Throwable) {
         println("Lost connection, exiting to restart service")
         System.exit(1)

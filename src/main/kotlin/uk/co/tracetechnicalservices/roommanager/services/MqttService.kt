@@ -9,18 +9,21 @@ import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import uk.co.tracetechnicalservices.roommanager.MqttSubscriber
 import uk.co.tracetechnicalservices.roommanager.models.MqttMessageWithTopic
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.random.Random
+import kotlin.system.exitProcess
 
 @Service
 class MqttService(private val eventPublisher: ApplicationEventPublisher) {
     private var transmitEnabled = false
     private val broker = "tcp://mqtt.io.home:1883"
-    private val clientId = "RoomManageraaa-${java.util.UUID.randomUUID().toString()}"
+    private val clientId = "RoomManager-${Random.nextLong(0L,9999L)}"
     private val connOpts = MqttConnectOptions()
     private var rxClient: MqttAsyncClient? = null
     private var txClient: MqttClient? = null
     private val rxPersistence = MemoryPersistence()
     private val txPersistence = MemoryPersistence()
-    private var listeners: MutableMap<String, PublishSubject<MqttMessageWithTopic>> = LinkedHashMap()
+    private var listeners: ConcurrentHashMap<String, PublishSubject<MqttMessageWithTopic>> = ConcurrentHashMap()
     private val mqttCallback = MqttSubscriber(listeners)
 
     init {
@@ -48,7 +51,7 @@ class MqttService(private val eventPublisher: ApplicationEventPublisher) {
             connectToTx()
         } catch (me: MqttException) {
             println("Did not get a connection, exiting to restart service")
-            System.exit(1)
+            exitProcess(1)
         }
     }
 
@@ -117,10 +120,10 @@ class MqttService(private val eventPublisher: ApplicationEventPublisher) {
     }
 
     fun isConnected(): Boolean {
-        if(rxClient == null) {
+        if (rxClient == null || txClient == null) {
             return false
         }
-        return rxClient!!.isConnected
+        return rxClient!!.isConnected && txClient!!.isConnected
 
     }
 }
